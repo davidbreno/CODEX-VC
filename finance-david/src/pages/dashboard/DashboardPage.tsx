@@ -11,6 +11,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import type { TooltipContentProps } from "recharts";
 
@@ -256,6 +259,8 @@ export const DashboardPage = () => {
   const { data: exits = [] } = useTransactions("saida");
   const { data: accounts = [] } = useAccounts();
 
+  const [categoryView, setCategoryView] = useState<"entradas" | "saidas">("saidas");
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -286,6 +291,21 @@ export const DashboardPage = () => {
       ),
     [entries, exits],
   );
+
+  const categoryPieData = useMemo(
+    () =>
+      categories.map((c) => ({ name: c.categoria, value: categoryView === "entradas" ? c.entradas : c.saidas })),
+    [categories, categoryView],
+  );
+
+  const pieColors = [
+    "#4f8dff",
+    "#8a5dff",
+    "#f0bd4f",
+    "#ff6f5f",
+    "#3af3ff",
+    "#78ffb2",
+  ];
 
   const totalEntradas = useMemo(() => entries.reduce((sum, item) => sum + (item.amount ?? 0), 0), [entries]);
   const totalSaidas = useMemo(() => exits.reduce((sum, item) => sum + (item.amount ?? 0), 0), [exits]);
@@ -332,7 +352,62 @@ export const DashboardPage = () => {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Mobile: Performance no topo */}
+      <section className="block lg:hidden">
+        {mounted && (
+          <div className="glass-card flex flex-col gap-6 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Performance liquida</h2>
+                <p className="text-sm text-[var(--color-text-muted)]">Evolucao diaria do saldo combinando entradas e saidas.</p>
+              </div>
+              <span className="rounded-full bg-[var(--color-accent-soft)] px-4 py-2 text-xs font-semibold text-[var(--color-accent)]">Ultimos 16 dias</span>
+            </div>
+            <div className="relative h-80 w-full overflow-hidden rounded-[28px] bg-[var(--color-surface-muted)]/20">
+              <div aria-hidden className="pointer-events-none absolute inset-0 opacity-80" style={{ background: "radial-gradient(120% 120% at 18% 10%, var(--color-profit-soft) 0%, rgba(0,0,0,0) 58%), radial-gradient(120% 120% at 82% 92%, var(--color-loss-soft) 0%, rgba(0,0,0,0) 60%)" }} />
+              <ResponsiveContainer>
+                <AreaChart data={performance}>
+                  <defs>
+                    <linearGradient id="performanceProfit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-profit)" stopOpacity={0.38} />
+                      <stop offset="100%" stopColor="var(--color-profit)" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="performanceLoss" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-loss)" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="var(--color-loss)" stopOpacity={0.08} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="rgba(120,130,170,0.12)" vertical={false} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: "rgba(120,130,170,0.18)" }} tick={{ fill: "var(--color-text-muted)", fontSize: 12 }} dy={4} />
+                  <YAxis tickLine={false} axisLine={{ stroke: "rgba(120,130,170,0.18)" }} tick={{ fill: "var(--color-text-muted)", fontSize: 12 }} tickFormatter={(value: number) => formatCurrency(value)} width={80} />
+                  <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="6 6" />
+                  <Tooltip content={PerformanceTooltip} cursor={{ stroke: "var(--color-border)", strokeDasharray: "4 4" }} />
+                  <Area type="monotone" dataKey="cumulativeProfitLine" stroke="none" fill="rgba(255,255,255,0.25)" fillOpacity={0.18} isAnimationActive={false} dot={false} activeDot={false} />
+                  <Area type="monotone" dataKey="cumulativeLossLine" stroke="none" fill="rgba(255,255,255,0.25)" fillOpacity={0.18} isAnimationActive={false} dot={false} activeDot={false} />
+                  <Area type="monotone" dataKey="profit" stroke="var(--color-profit)" strokeWidth={2.5} fill="url(#performanceProfit)" activeDot={{ r: 5, fill: "var(--color-profit)", strokeWidth: 0 }} />
+                  <Area type="monotone" dataKey="loss" stroke="var(--color-loss)" strokeWidth={2.5} fill="url(#performanceLoss)" activeDot={{ r: 5, fill: "var(--color-loss)", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="cumulativeProfitLine" stroke="var(--color-profit)" strokeDasharray="6 6" strokeWidth={1.5} dot={false} />
+                  <Line type="monotone" dataKey="cumulativeLossLine" stroke="var(--color-loss)" strokeDasharray="6 6" strokeWidth={1.5} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Mobile: cards em 2 colunas */}
+      <section className="grid grid-cols-2 gap-4 lg:hidden">
+        {overviewCards.map((card) => (
+          <div key={card.title} className="glass-card flex flex-col gap-3 p-6">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{card.title}</h3>
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">{card.value}</p>
+            <span className="text-[10px] font-semibold text-[var(--color-accent)]">{card.delta} vs. mes anterior</span>
+          </div>
+        ))}
+      </section>
+
+      {/* Desktop: cards no topo como antes */}
+      <section className="hidden gap-4 md:grid-cols-2 xl:grid-cols-4 lg:grid">
         {overviewCards.map((card) => (
           <div key={card.title} className="glass-card flex flex-col gap-3 p-6">
             <h3 className="text-sm font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -348,7 +423,8 @@ export const DashboardPage = () => {
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+      {/* Desktop: charts lado a lado */}
+      <section className="hidden gap-6 lg:grid lg:grid-cols-[1.4fr,1fr]">
         {mounted && (
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -489,60 +565,74 @@ export const DashboardPage = () => {
                 Comparativo de entradas e saidas por categoria.
               </p>
             </div>
-            <span className="rounded-full bg-[var(--color-accent-soft)] px-4 py-2 text-xs font-semibold text-[var(--color-accent)]">
-              Top 6 categorias
-            </span>
+            <div className="inline-flex overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-xs">
+              <button
+                type="button"
+                className={`px-3 py-1 font-semibold ${categoryView === "entradas" ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"}`}
+                onClick={() => setCategoryView("entradas")}
+              >
+                Entradas
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-1 font-semibold ${categoryView === "saidas" ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"}`}
+                onClick={() => setCategoryView("saidas")}
+              >
+                Saidas
+              </button>
+            </div>
           </div>
           <div className="relative h-80 w-full overflow-hidden rounded-[28px] bg-[var(--color-surface-muted)]/20">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-90"
-              style={{
-                background:
-                  "radial-gradient(130% 130% at 80% 12%, var(--color-accent-soft) 0%, rgba(0,0,0,0) 58%), radial-gradient(130% 130% at 10% 88%, rgba(255,255,255,0.18) 0%, rgba(0,0,0,0) 64%)",
-              }}
-            />
             <ResponsiveContainer>
-              <AreaChart data={categories}>
-                <CartesianGrid stroke="rgba(120,130,170,0.12)" vertical={false} />
-                <XAxis
-                  dataKey="categoria"
-                  tickLine={false}
-                  axisLine={{ stroke: "rgba(120,130,170,0.18)" }}
-                  tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={{ stroke: "rgba(120,130,170,0.18)" }}
-                  tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
-                  tickFormatter={(value: number) => formatCurrency(value)}
-                  width={80}
-                />
-                <Tooltip
-                  formatter={(value: number) => formatCurrency(value)}
-                  contentStyle={{
-                    background: "rgba(12, 14, 18, 0.92)",
-                    border: "1px solid rgba(120,130,170,0.2)",
-                    borderRadius: "16px",
-                    color: "var(--color-text-primary)",
-                  }}
-                />
-                <defs>
-                  <linearGradient id="areaEntradas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-profit)" stopOpacity={0.75} />
-                    <stop offset="100%" stopColor="var(--color-profit)" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="areaSaidas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-loss)" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="var(--color-loss)" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="entradas" stroke="var(--color-profit)" strokeWidth={2.5} fill="url(#areaEntradas)" />
-                <Area type="monotone" dataKey="saidas" stroke="var(--color-loss)" strokeWidth={2.5} fill="url(#areaSaidas)" />
-              </AreaChart>
+              <PieChart>
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Pie
+                  data={categoryPieData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={55}
+                  outerRadius={95}
+                  paddingAngle={4}
+                  isAnimationActive={false}
+                >
+                  {categoryPieData.map((_, idx) => (
+                    <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
+        )}
+      </section>
+
+      {/* Mobile: categoria no final */}
+      <section className="block lg:hidden">
+        {mounted && (
+          <div className="glass-card flex flex-col gap-6 p-6">
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Distribuicao por categoria</h2>
+              <p className="text-sm text-[var(--color-text-muted)]">Comparativo de entradas e saidas por categoria.</p>
+            </div>
+            <div className="relative h-80 w-full overflow-hidden rounded-[28px] bg-[var(--color-surface-muted)]/20">
+              <div className="flex items-center justify-between">
+                <div className="inline-flex overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-xs">
+                  <button type="button" className={`px-3 py-1 font-semibold ${categoryView === "entradas" ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"}`} onClick={() => setCategoryView("entradas")}>Entradas</button>
+                  <button type="button" className={`px-3 py-1 font-semibold ${categoryView === "saidas" ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"}`} onClick={() => setCategoryView("saidas")}>Saidas</button>
+                </div>
+              </div>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Pie data={categoryPieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={4} isAnimationActive={false}>
+                    {categoryPieData.map((_, idx) => (
+                      <Cell key={`cell-m-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         )}
       </section>
     </div>
