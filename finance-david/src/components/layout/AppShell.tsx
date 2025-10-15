@@ -6,6 +6,8 @@ import { Topbar } from "./Topbar";
 
 import { LabeledErrorBoundary } from "../common/ErrorBoundary";
 
+import { LabeledErrorBoundary } from "../common/ErrorBoundary";
+
 export const AppShell = ({ children }: PropsWithChildren) => {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-bg)] lg:flex-row">
@@ -21,4 +23,5 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     </div>
   );
 };
+
 
