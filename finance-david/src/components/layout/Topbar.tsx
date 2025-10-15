@@ -10,15 +10,8 @@ import { NAVIGATION_ITEMS } from "../../constants/navigation";
 import { isSectionVisible } from "../../store/ui";
 
 const themeLabels: Record<string, string> = {
-  aurora: "Aurora",
-  dark: "Dark",
-  nude: "Nude",
-  sunset: "Sunset Glow",
-  ocean: "Ocean Breeze",
-  "neon-cyan": "Neon Cyan",
+  neon: "Neon",
   obsidian: "Obsidian Gold",
-  midnight: "Midnight Halo",
-  studio: "Studio Dark",
 };
 
 export const Topbar = () => {
@@ -29,7 +22,7 @@ export const Topbar = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const currentThemeLabel = useMemo(() => themeLabels[theme] ?? "Aurora", [theme]);
+  const currentThemeLabel = useMemo(() => themeLabels[theme] ?? "Neon", [theme]);
   const navigationItems = useMemo(
     () => NAVIGATION_ITEMS.filter((item) => isSectionVisible(item.key, hiddenMenuSections)),
     [hiddenMenuSections],
