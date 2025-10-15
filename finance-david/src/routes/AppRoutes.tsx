@@ -3,6 +3,7 @@ import { Navigate, Outlet, useRoutes } from "react-router-dom";
 
 import { useAuth } from "../providers/AuthProvider";
 import { AppShell } from "../components/layout/AppShell";
+import { ErrorBoundary } from "../components/common/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
 const EntriesPage = lazy(() => import("../pages/entries/EntriesPage"));
@@ -41,9 +42,9 @@ const ProtectedRoute = () => {
   }
 
   return (
-    <AppShell>
+    <ErrorBoundary><AppShell>
       <Outlet />
-    </AppShell>
+    </AppShell></ErrorBoundary>
   );
 };
 
@@ -122,3 +123,4 @@ export const AppRoutes = () =>
     },
     { path: "*", element: <Navigate to="/" replace /> },
   ]);
+
