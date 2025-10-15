@@ -44,21 +44,24 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-bg: #12121f;
-  --color-surface: #1c1c2b;
-  --color-surface-muted: #181826;
-  --color-border: rgba(115, 128, 178, 0.25);
-  --color-text-primary: #f4f4ff;
-  --color-text-muted: #a3a8c3;
-  --color-accent: #8c7bff;
-  --color-accent-soft: rgba(140, 123, 255, 0.14);
-  --color-accent-gradient: linear-gradient(135deg, #8c7bff 0%, #3bbef2 100%);
-  --logo-background: rgba(140, 123, 255, 0.18);
-  --logo-gradient: linear-gradient(135deg, #cf85ff 0%, #4ed7ff 100%);
-  --color-profit: #3bbef2;
-  --color-profit-soft: rgba(59, 190, 242, 0.24);
-  --color-loss: #ff7c9b;
-  --color-loss-soft: rgba(255, 124, 155, 0.26);
+  /* Dark Neon palette inspirado na referência enviada */
+  --color-bg: #0b0f17;                /* fundo principal bem escuro */
+  --color-surface: #111624;           /* cartões */
+  --color-surface-muted: #0e1322;     /* superfícies secundárias */
+  --color-border: rgba(110, 140, 200, 0.22);
+  --color-text-primary: #e9eef8;
+  --color-text-muted: #8ea0bf;
+  /* acento com gradiente neon (violeta → ciano → laranja) */
+  --color-accent: #a770ff;
+  --color-accent-soft: rgba(167, 112, 255, 0.18);
+  --color-accent-gradient: linear-gradient(135deg, #a770ff 0%, #26e0ff 48%, #ff8a3d 100%);
+  --logo-background: rgba(167, 112, 255, 0.22);
+  --logo-gradient: linear-gradient(135deg, #26e0ff 0%, #a770ff 50%, #ff8a3d 100%);
+  /* cores para gráficos */
+  --color-profit: #ff8a3d;            /* laranja neon */
+  --color-profit-soft: rgba(255, 138, 61, 0.26);
+  --color-loss: #6fdcfe;              /* ciano vibrante */
+  --color-loss-soft: rgba(111, 220, 254, 0.28);
 }
 
 [data-theme="nude"] {
